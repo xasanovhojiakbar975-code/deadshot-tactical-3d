@@ -1,0 +1,8 @@
+{
+  "appId": "uz.deadshot.tactical3d",
+  "appName": "DEADSHOT 3D",
+  "webDir": "www",
+  "bundledWebRuntime": false,
+  "server": { "androidScheme": "https" },
+  "android": { "allowMixedContent": true, "captureInput": true }
+}
