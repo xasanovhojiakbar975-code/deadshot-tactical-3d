@@ -1,8 +1,10 @@
 name: Build Android APK
+
 on:
   push:
     branches: [ main, master ]
   workflow_dispatch:
+
 jobs:
   build-apk:
     runs-on: ubuntu-latest
@@ -10,24 +12,35 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
       - uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
-      - run: npm install
-      - run: |
+      - name: Check www folder
+        run: |
+          mkdir -p www
+          if [ ! -f www/index.html ]; then
+            echo "<h1>Error: www/index.html missing</h1>" > www/index.html
+          fi
+      - name: Install Capacitor
+        run: npm install @capacitor/core@6 @capacitor/cli@6 @capacitor/android@6
+      - name: Add Android platform
+        run: |
           npx cap add android
           npx cap sync android
-      - run: |
+      - name: Configure Landscape & Permissions
+        run: |
           MANIFEST="android/app/src/main/AndroidManifest.xml"
           sed -i 's/android:name=".MainActivity"/android:name=".MainActivity" android:screenOrientation="sensorLandscape" android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode"/g' $MANIFEST
           sed -i 's/<uses-permission android:name="android.permission.INTERNET" \/>/<uses-permission android:name="android.permission.INTERNET" \/>\n    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" \/>/g' $MANIFEST
-      - working-directory: android
+      - name: Build Debug APK
+        working-directory: android
         run: |
           chmod +x gradlew
           ./gradlew assembleDebug
-      - uses: actions/upload-artifact@v4
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
         with:
           name: DEADSHOT-TACTICAL-3D-APK
           path: android/app/build/outputs/apk/debug/app-debug.apk
